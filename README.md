@@ -11,12 +11,16 @@ Android TV / Fire Stick app for **Los Compadres** restaurant displays.
 | Page | Who | URL source |
 |------|-----|------------|
 | 1 — Slideshow (launch) | Customers | `url_home` in `app/src/main/res/values/urls.xml` |
-| 2 — Cameras | Staff only | `url_cameras` (or LAN `url_cameras_lan`) |
+| 2 — Cameras | Staff only | `url_cameras` / optional `url_cameras_tv` (LAN variants) |
 
 Default PIN: **`0909`** (change in `urls.xml` → `staff_pin` before production).
 
-**Staff path:** long-press the remote **Menu** key (~0.7s) → enter PIN → cameras WebView.  
-**Back** from cameras returns to the slideshow. Short Menu press does nothing useful for customers.
+**Staff path:** long-press the remote **Menu** key (~0.7s) → enter PIN → cameras WebView with a slim staff bar:
+- **Refresh** — reloads the current WebView page
+- **View: Standard | TV polish** — toggles between `url_cameras` and `url_cameras_tv` (choice remembered in SharedPreferences)
+- **Back to slideshow** — returns to customer home
+
+Customer slideshow stays fullscreen with **no** persistent refresh chrome. Short Menu on slideshow does nothing; wrong/cancel PIN keeps the UI clean. **Back** from cameras returns to the slideshow.
 
 ## Requirements
 
@@ -76,6 +80,8 @@ Edit `app/src/main/res/values/urls.xml`:
 <string name="url_home">https://…/local/compadres-tv/index.html</string>
 <string name="url_cameras">https://…/lovelace/cameras</string>
 <string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
+<string name="url_cameras_tv">https://…/lovelace/cameras-tv</string>
+<string name="url_cameras_tv_lan">http://192.168.1.27:8123/lovelace/cameras-tv</string>
 <string name="staff_pin">0909</string>
 <bool name="prefer_cameras_lan">false</bool>
 ```

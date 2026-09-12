@@ -2,6 +2,7 @@ package com.loscompadres.tv
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.SystemClock
@@ -14,22 +15,30 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 /**
  * Los Compadres TV — Android TV / Fire Stick shell.
  *
- * Page 1 (default): customer slideshow WebView.
- * Page 2 (staff): cameras WebView after long-press Menu + correct PIN.
- * Back from cameras returns to slideshow. Customers never see a cameras tab.
+ * Page 1 (default): customer slideshow WebView (no persistent staff chrome).
+ * Page 2 (staff): cameras WebView after long-press Menu + correct PIN,
+ * with a slim staff bar (Refresh, View Standard|TV polish, Back to slideshow).
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var staffBar: LinearLayout
+    private lateinit var btnRefresh: Button
+    private lateinit var btnViewToggle: Button
+    private lateinit var btnBackSlideshow: Button
+
     private var showingCameras = false
+    private var useTvPolish = false
     private var pinDialog: AlertDialog? = null
 
     /** Long-press Menu detection (KEYCODE_MENU). */
@@ -38,6 +47,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val MENU_LONG_PRESS_MS = 700L
+        private const val PREFS_NAME = "staff_prefs"
+        private const val PREF_TV_POLISH = "cameras_tv_polish"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -47,6 +58,21 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         webView = findViewById(R.id.webview)
+        staffBar = findViewById(R.id.staff_bar)
+        btnRefresh = findViewById(R.id.btn_refresh)
+        btnViewToggle = findViewById(R.id.btn_view_toggle)
+        btnBackSlideshow = findViewById(R.id.btn_back_slideshow)
+
+        useTvPolish = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(PREF_TV_POLISH, false)
+
+        btnRefresh.setOnClickListener { refreshCurrentPage() }
+        btnViewToggle.setOnClickListener { toggleCamerasView() }
+        btnBackSlideshow.setOnClickListener { loadHome() }
+
+        updateViewToggleLabel()
+        hideStaffBar()
+
         configureWebView(webView)
         loadHome()
     }
@@ -71,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             builtInZoomControls = false
             displayZoomControls = false
             setSupportZoom(false)
-            userAgentString = userAgentString + " LosCompadresTV/1.0"
+            userAgentString = userAgentString + " LosCompadresTV/1.1"
         }
 
         wv.webViewClient = object : WebViewClient() {
@@ -105,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
                 webView.visibility = View.GONE
+                hideStaffBar()
             }
 
             override fun onHideCustomView() {
@@ -114,6 +141,7 @@ class MainActivity : AppCompatActivity() {
                 customViewCallback?.onCustomViewHidden()
                 customViewCallback = null
                 webView.visibility = View.VISIBLE
+                if (showingCameras) showStaffBar()
             }
 
             override fun getDefaultVideoPoster(): Bitmap? {
@@ -124,18 +152,66 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadHome() {
         showingCameras = false
+        hideStaffBar()
         webView.loadUrl(getString(R.string.url_home))
     }
 
     private fun loadCameras() {
         showingCameras = true
+        showStaffBar()
+        updateViewToggleLabel()
+        webView.loadUrl(resolveCamerasUrl())
+        // Give D-pad focus to Refresh for Fire Stick remotes
+        btnRefresh.post { btnRefresh.requestFocus() }
+    }
+
+    private fun resolveCamerasUrl(): String {
         val preferLan = resources.getBoolean(R.bool.prefer_cameras_lan)
-        val url = if (preferLan) {
-            getString(R.string.url_cameras_lan)
-        } else {
-            getString(R.string.url_cameras)
+        return when {
+            useTvPolish && preferLan -> getString(R.string.url_cameras_tv_lan)
+            useTvPolish -> getString(R.string.url_cameras_tv)
+            preferLan -> getString(R.string.url_cameras_lan)
+            else -> getString(R.string.url_cameras)
         }
-        webView.loadUrl(url)
+    }
+
+    private fun refreshCurrentPage() {
+        val current = webView.url
+        if (!current.isNullOrBlank() && current != "about:blank") {
+            webView.reload()
+        } else if (showingCameras) {
+            webView.loadUrl(resolveCamerasUrl())
+        } else {
+            webView.loadUrl(getString(R.string.url_home))
+        }
+    }
+
+    private fun toggleCamerasView() {
+        useTvPolish = !useTvPolish
+        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(PREF_TV_POLISH, useTvPolish)
+            .apply()
+        updateViewToggleLabel()
+        if (showingCameras) {
+            webView.loadUrl(resolveCamerasUrl())
+        }
+    }
+
+    private fun updateViewToggleLabel() {
+        btnViewToggle.text = if (useTvPolish) {
+            getString(R.string.staff_view_tv_polish_btn)
+        } else {
+            getString(R.string.staff_view_standard_btn)
+        }
+    }
+
+    private fun showStaffBar() {
+        staffBar.visibility = View.VISIBLE
+    }
+
+    private fun hideStaffBar() {
+        staffBar.visibility = View.GONE
     }
 
     private fun showPinDialog() {
@@ -162,6 +238,7 @@ class MainActivity : AppCompatActivity() {
                     loadCameras()
                 } else {
                     Toast.makeText(this, R.string.pin_wrong, Toast.LENGTH_SHORT).show()
+                    // Stay on clean slideshow after wrong PIN
                 }
             }
             .setNegativeButton(R.string.pin_cancel, null)
@@ -183,7 +260,13 @@ class MainActivity : AppCompatActivity() {
                         val held = SystemClock.elapsedRealtime() - menuDownAt
                         if (held >= MENU_LONG_PRESS_MS) {
                             menuLongHandled = true
-                            showPinDialog()
+                            if (showingCameras) {
+                                // On cameras: long Menu focuses staff bar Refresh
+                                showStaffBar()
+                                btnRefresh.requestFocus()
+                            } else {
+                                showPinDialog()
+                            }
                             return true
                         }
                     }
@@ -191,9 +274,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 KeyEvent.ACTION_UP -> {
                     val held = SystemClock.elapsedRealtime() - menuDownAt
-                    // Short press: intentionally do nothing useful for customers
+                    // Short press on slideshow: do nothing (keep customer UI clean)
+                    // Short press on cameras: ensure staff bar visible / focus Refresh
                     if (!menuLongHandled && held < MENU_LONG_PRESS_MS) {
-                        // ignore short Menu press
+                        if (showingCameras) {
+                            showStaffBar()
+                            btnRefresh.requestFocus()
+                        }
                     }
                     menuDownAt = 0L
                     return true

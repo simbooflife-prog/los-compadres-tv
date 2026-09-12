@@ -3,11 +3,17 @@
     <!-- Customer home (Page 1) — default launch: restaurant slideshow -->
     <string name="url_home">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-tv/index.html</string>
 
-    <!-- Staff cameras (Page 2) — Nabu Casa remote URL -->
+    <!-- Staff cameras (Page 2) — Nabu Casa remote URL (standard grid) -->
     <string name="url_cameras">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/lovelace/cameras</string>
 
     <!-- Staff cameras LAN fallback (same Wi‑Fi as Home Assistant) -->
     <string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
+
+    <!-- Optional TV polish cameras view (HA dashboard; may 404 until created) -->
+    <string name="url_cameras_tv">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/lovelace/cameras-tv</string>
+
+    <!-- TV polish LAN fallback -->
+    <string name="url_cameras_tv_lan">http://192.168.1.27:8123/lovelace/cameras-tv</string>
 
     <!-- Staff PIN — change before production deploy. Documented default: 0909 -->
     <string name="staff_pin">0909</string>

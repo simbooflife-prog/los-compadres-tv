@@ -7,4 +7,11 @@
     <string name="pin_ok">OK</string>
     <string name="pin_cancel">Cancel</string>
     <string name="pin_wrong">Incorrect PIN</string>
+    <string name="staff_refresh">Refresh</string>
+    <string name="staff_back_slideshow">Back to slideshow</string>
+    <string name="staff_view_label">View:</string>
+    <string name="staff_view_standard">Standard</string>
+    <string name="staff_view_tv_polish">TV polish</string>
+    <string name="staff_view_standard_btn">View: Standard</string>
+    <string name="staff_view_tv_polish_btn">View: TV polish</string>
 </resources>

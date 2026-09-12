@@ -11,4 +11,55 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:hardwareAccelerated="true" />
+
+    <!-- Staff-only slim bar (cameras page after PIN). Hidden on customer slideshow. -->
+    <LinearLayout
+        android:id="@+id/staff_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="#E61A1A1A"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone"
+        android:focusable="true"
+        android:descendantFocusability="afterDescendants">
+
+        <Button
+            android:id="@+id/btn_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minWidth="120dp"
+            android:text="@string/staff_refresh"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_view_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:focusable="true"
+            android:minWidth="180dp"
+            android:text="@string/staff_view_standard_btn"
+            android:textAllCaps="false" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btn_back_slideshow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:minWidth="160dp"
+            android:text="@string/staff_back_slideshow"
+            android:textAllCaps="false" />
+    </LinearLayout>
 </FrameLayout>
