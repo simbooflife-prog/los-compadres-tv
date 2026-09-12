@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Los Compadres TV</string>
+    <string name="pin_title">Staff access</string>
+    <string name="pin_message">Enter PIN to open cameras</string>
+    <string name="pin_hint">PIN</string>
+    <string name="pin_ok">OK</string>
+    <string name="pin_cancel">Cancel</string>
+    <string name="pin_wrong">Incorrect PIN</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Customer home (Page 1) — default launch: restaurant slideshow -->
+    <string name="url_home">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-tv/index.html</string>
+
+    <!-- Staff cameras (Page 2) — Nabu Casa remote URL -->
+    <string name="url_cameras">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/lovelace/cameras</string>
+
+    <!-- Staff cameras LAN fallback (same Wi‑Fi as Home Assistant) -->
+    <string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
+
+    <!-- Staff PIN — change before production deploy. Documented default: 1234 -->
+    <string name="staff_pin">1234</string>
+
+    <!-- Prefer LAN cameras when true (set false to use Nabu Casa only) -->
+    <bool name="prefer_cameras_lan">false</bool>
+</resources>
