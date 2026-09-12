@@ -13,7 +13,7 @@ Android TV / Fire Stick app for **Los Compadres** restaurant displays.
 | 1 — Slideshow (launch) | Customers | `url_home` in `app/src/main/res/values/urls.xml` |
 | 2 — Cameras | Staff only | `url_cameras` (or LAN `url_cameras_lan`) |
 
-Default PIN: **`1234`** (change in `urls.xml` → `staff_pin` before production).
+Default PIN: **`0909`** (change in `urls.xml` → `staff_pin` before production).
 
 **Staff path:** long-press the remote **Menu** key (~0.7s) → enter PIN → cameras WebView.  
 **Back** from cameras returns to the slideshow. Short Menu press does nothing useful for customers.
@@ -76,7 +76,7 @@ Edit `app/src/main/res/values/urls.xml`:
 <string name="url_home">https://…/local/compadres-tv/index.html</string>
 <string name="url_cameras">https://…/lovelace/cameras</string>
 <string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
-<string name="staff_pin">1234</string>
+<string name="staff_pin">0909</string>
 <bool name="prefer_cameras_lan">false</bool>
 ```
 

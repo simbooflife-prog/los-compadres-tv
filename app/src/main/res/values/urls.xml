@@ -9,8 +9,8 @@
     <!-- Staff cameras LAN fallback (same Wi‑Fi as Home Assistant) -->
     <string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
 
-    <!-- Staff PIN — change before production deploy. Documented default: 1234 -->
-    <string name="staff_pin">1234</string>
+    <!-- Staff PIN — change before production deploy. Documented default: 0909 -->
+    <string name="staff_pin">0909</string>
 
     <!-- Prefer LAN cameras when true (set false to use Nabu Casa only) -->
     <bool name="prefer_cameras_lan">false</bool>
