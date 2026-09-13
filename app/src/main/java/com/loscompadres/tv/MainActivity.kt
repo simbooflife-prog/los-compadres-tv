@@ -26,8 +26,9 @@ import androidx.appcompat.app.AppCompatActivity
  * Los Compadres TV — Android TV / Fire Stick shell.
  *
  * Page 1 (default): customer slideshow WebView (no persistent staff chrome).
- * Page 2 (staff): cameras WebView after long-press Menu + correct PIN,
- * with a slim staff bar (Refresh, View Standard|TV polish, Back to slideshow).
+ * Page 2 (staff): /local cameras kiosk after long-press Menu + correct PIN
+ * (no Lovelace / no HA login), with slim staff bar
+ * (Refresh, View Standard|All 5, Back to slideshow).
  */
 class MainActivity : AppCompatActivity() {
 
@@ -38,7 +39,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnBackSlideshow: Button
 
     private var showingCameras = false
-    private var useTvPolish = false
+    /** false = Standard ≤4 cams; true = All 5 */
+    private var camerasAllFive = false
     private var pinDialog: AlertDialog? = null
 
     /** Long-press Menu detection (KEYCODE_MENU). */
@@ -48,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val MENU_LONG_PRESS_MS = 700L
         private const val PREFS_NAME = "staff_prefs"
-        private const val PREF_TV_POLISH = "cameras_tv_polish"
+        private const val PREF_CAMERAS_ALL_FIVE = "cameras_all_five"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -63,8 +65,8 @@ class MainActivity : AppCompatActivity() {
         btnViewToggle = findViewById(R.id.btn_view_toggle)
         btnBackSlideshow = findViewById(R.id.btn_back_slideshow)
 
-        useTvPolish = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(PREF_TV_POLISH, false)
+        camerasAllFive = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(PREF_CAMERAS_ALL_FIVE, false)
 
         btnRefresh.setOnClickListener { refreshCurrentPage() }
         btnViewToggle.setOnClickListener { toggleCamerasView() }
@@ -97,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             builtInZoomControls = false
             displayZoomControls = false
             setSupportZoom(false)
-            userAgentString = userAgentString + " LosCompadresTV/1.1"
+            userAgentString = userAgentString + " LosCompadresTV/1.2"
         }
 
         wv.webViewClient = object : WebViewClient() {
@@ -150,10 +152,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun resolveHomeUrl(): String {
+        val preferLan = resources.getBoolean(R.bool.prefer_home_lan)
+        return if (preferLan) {
+            getString(R.string.url_home)
+        } else {
+            getString(R.string.url_home_nabu)
+        }
+    }
+
     private fun loadHome() {
         showingCameras = false
         hideStaffBar()
-        webView.loadUrl(getString(R.string.url_home))
+        webView.loadUrl(resolveHomeUrl())
     }
 
     private fun loadCameras() {
@@ -168,10 +179,10 @@ class MainActivity : AppCompatActivity() {
     private fun resolveCamerasUrl(): String {
         val preferLan = resources.getBoolean(R.bool.prefer_cameras_lan)
         return when {
-            useTvPolish && preferLan -> getString(R.string.url_cameras_tv_lan)
-            useTvPolish -> getString(R.string.url_cameras_tv)
-            preferLan -> getString(R.string.url_cameras_lan)
-            else -> getString(R.string.url_cameras)
+            camerasAllFive && preferLan -> getString(R.string.url_cameras_all)
+            camerasAllFive -> getString(R.string.url_cameras_all_nabu)
+            preferLan -> getString(R.string.url_cameras)
+            else -> getString(R.string.url_cameras_nabu)
         }
     }
 
@@ -182,15 +193,15 @@ class MainActivity : AppCompatActivity() {
         } else if (showingCameras) {
             webView.loadUrl(resolveCamerasUrl())
         } else {
-            webView.loadUrl(getString(R.string.url_home))
+            webView.loadUrl(resolveHomeUrl())
         }
     }
 
     private fun toggleCamerasView() {
-        useTvPolish = !useTvPolish
+        camerasAllFive = !camerasAllFive
         getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
-            .putBoolean(PREF_TV_POLISH, useTvPolish)
+            .putBoolean(PREF_CAMERAS_ALL_FIVE, camerasAllFive)
             .apply()
         updateViewToggleLabel()
         if (showingCameras) {
@@ -199,8 +210,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateViewToggleLabel() {
-        btnViewToggle.text = if (useTvPolish) {
-            getString(R.string.staff_view_tv_polish_btn)
+        btnViewToggle.text = if (camerasAllFive) {
+            getString(R.string.staff_view_all_five_btn)
         } else {
             getString(R.string.staff_view_standard_btn)
         }

@@ -11,7 +11,7 @@
     <string name="staff_back_slideshow">Back to slideshow</string>
     <string name="staff_view_label">View:</string>
     <string name="staff_view_standard">Standard</string>
-    <string name="staff_view_tv_polish">TV polish</string>
+    <string name="staff_view_all_five">All 5</string>
     <string name="staff_view_standard_btn">View: Standard</string>
-    <string name="staff_view_tv_polish_btn">View: TV polish</string>
+    <string name="staff_view_all_five_btn">View: All 5</string>
 </resources>

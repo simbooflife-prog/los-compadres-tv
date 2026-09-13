@@ -2,25 +2,38 @@
 
 Android TV / Fire Stick app for **Los Compadres** restaurant displays.
 
-- **Package:** `com.loscompadres.tv`
-- **Customer home (default):** fullscreen WebView slideshow
-- **Staff cameras:** hidden behind long-press **Menu** + PIN (no visible tab)
+- **Package:** `com.loscompadres.tv` (version **1.2.0**)
+- **Customer home (default):** fullscreen WebView slideshow over `/local` (LAN primary)
+- **Staff cameras:** hidden behind long-press **Menu** + PIN — **no HA login / no Lovelace**; snapshot kiosk under `/local/compadres-cameras/`
 
 ## Pages
 
 | Page | Who | URL source |
 |------|-----|------------|
-| 1 — Slideshow (launch) | Customers | `url_home` in `app/src/main/res/values/urls.xml` |
-| 2 — Cameras | Staff only | `url_cameras` / optional `url_cameras_tv` (LAN variants) |
+| 1 — Slideshow (launch) | Customers | `url_home` (LAN) / `url_home_nabu` backup |
+| 2 — Cameras ≤4 | Staff only | `url_cameras` / `url_cameras_nabu` (`/local/…/index.html`) |
+| 2b — All 5 cams | Staff toggle | `url_cameras_all` / `url_cameras_all_nabu` (`/local/…/all.html`) |
 
 Default PIN: **`0909`** (change in `urls.xml` → `staff_pin` before production).
 
-**Staff path:** long-press the remote **Menu** key (~0.7s) → enter PIN → cameras WebView with a slim staff bar:
+**Staff path:** long-press the remote **Menu** key (~0.7s) → enter PIN → `/local` cameras WebView (no Lovelace) with a slim staff bar:
 - **Refresh** — reloads the current WebView page
-- **View: Standard | TV polish** — toggles between `url_cameras` and `url_cameras_tv` (choice remembered in SharedPreferences)
+- **View: Standard | All 5** — Standard = ≤4 cams (`index.html`); All 5 = `all.html` (choice remembered as `cameras_all_five`)
 - **Back to slideshow** — returns to customer home
 
+LAN is primary for both home and cameras (`prefer_home_lan` / `prefer_cameras_lan` = true) because the Stick stays on restaurant Wi‑Fi. Nabu Casa URLs are backup only.
+
 Customer slideshow stays fullscreen with **no** persistent refresh chrome. Short Menu on slideshow does nothing; wrong/cancel PIN keeps the UI clean. **Back** from cameras returns to the slideshow.
+
+## Update on Fire Stick (same package)
+
+Install over the previous build (same `com.loscompadres.tv` package) with Downloader or ADB — no uninstall required:
+
+```bash
+adb install -r LosCompadresTV-debug.apk
+```
+
+Or open the GitHub release asset URL in the **Downloader** app on the Stick.
 
 ## Requirements
 
@@ -77,30 +90,29 @@ If `adb devices` shows `unauthorized`, accept the prompt on the TV.
 Edit `app/src/main/res/values/urls.xml`:
 
 ```xml
-<string name="url_home">https://…/local/compadres-tv/index.html</string>
-<string name="url_cameras">https://…/lovelace/cameras</string>
-<string name="url_cameras_lan">http://192.168.1.27:8123/lovelace/cameras</string>
-<string name="url_cameras_tv">https://…/lovelace/cameras-tv</string>
-<string name="url_cameras_tv_lan">http://192.168.1.27:8123/lovelace/cameras-tv</string>
+<!-- Customer home — LAN primary -->
+<string name="url_home">http://192.168.1.27:8123/local/compadres-tv/index.html</string>
+<string name="url_home_nabu">https://…/local/compadres-tv/index.html</string>
+
+<!-- Staff cameras ≤4 snapshot kiosk (no Lovelace / no HA login) -->
+<string name="url_cameras">http://192.168.1.27:8123/local/compadres-cameras/index.html</string>
+<string name="url_cameras_nabu">https://…/local/compadres-cameras/index.html</string>
+
+<!-- All 5 cams -->
+<string name="url_cameras_all">http://192.168.1.27:8123/local/compadres-cameras/all.html</string>
+<string name="url_cameras_all_nabu">https://…/local/compadres-cameras/all.html</string>
+
 <string name="staff_pin">0909</string>
-<bool name="prefer_cameras_lan">false</bool>
+<bool name="prefer_cameras_lan">true</bool>
+<bool name="prefer_home_lan">true</bool>
 ```
 
-- Set `prefer_cameras_lan` to `true` when the Stick is on the same LAN as Home Assistant and you want the local URL.
-- **Do not put tokens in URLs.** Log in once inside the WebView; cookies persist.
+- Stick is always on restaurant Wi‑Fi → keep both `prefer_*_lan` true.
+- **Do not put HA tokens in the app.** Cameras use public `/local` kiosk pages (no login).
 
-## Cookie / login notes
+## Cookie notes
 
-The app enables:
-
-- JavaScript + DOM storage
-- `CookieManager.setAcceptCookie(true)`
-- third-party cookies for the WebView
-- `CookieManager.flush()` on page finish / pause
-
-After a Home Assistant or Nabu Casa login in the WebView, the session cookie should stick across app restarts on the same device. If login is lost, open staff cameras (or home), sign in again, and leave the app running briefly so cookies flush to disk.
-
-Cleartext HTTP is allowed for the LAN fallback (`usesCleartextTraffic`).
+Cookies remain enabled for any optional auth pages, but the staff cameras path is intentionally **login-free** (`/local` HTML). Cleartext HTTP is allowed for LAN (`usesCleartextTraffic`).
 
 ## Project layout
 

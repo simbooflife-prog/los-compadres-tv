@@ -11,8 +11,8 @@ android {
         applicationId = "com.loscompadres.tv"
         minSdk = 25
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
 
         // TV / Fire Stick
         resConfigs("en")
