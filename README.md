@@ -2,17 +2,17 @@
 
 Android TV / Fire Stick app for **Los Compadres** restaurant displays.
 
-- **Package:** `com.loscompadres.tv` (version **1.2.0**)
-- **Customer home (default):** fullscreen WebView slideshow over `/local` (LAN primary)
+- **Package:** `com.loscompadres.tv` (version **1.2.1**)
+- **Customer home (default):** fullscreen WebView slideshow over `/local` (**Nabu primary**)
 - **Staff cameras:** hidden behind long-press **Menu** + PIN — **no HA login / no Lovelace**; snapshot kiosk under `/local/compadres-cameras/`
 
 ## Pages
 
 | Page | Who | URL source |
 |------|-----|------------|
-| 1 — Slideshow (launch) | Customers | `url_home` (LAN) / `url_home_nabu` backup |
-| 2 — Cameras ≤4 | Staff only | `url_cameras` / `url_cameras_nabu` (`/local/…/index.html`) |
-| 2b — All 5 cams | Staff toggle | `url_cameras_all` / `url_cameras_all_nabu` (`/local/…/all.html`) |
+| 1 — Slideshow (launch) | Customers | `url_home` (Nabu) / `url_home_lan` backup |
+| 2 — Cameras ≤4 | Staff only | `url_cameras` / `url_cameras_lan` (`/local/…/index.html`) |
+| 2b — All 5 cams | Staff toggle | `url_cameras_all` / `url_cameras_all_lan` (`/local/…/all.html`) |
 
 Default PIN: **`0909`** (change in `urls.xml` → `staff_pin` before production).
 
@@ -21,7 +21,7 @@ Default PIN: **`0909`** (change in `urls.xml` → `staff_pin` before production)
 - **View: Standard | All 5** — Standard = ≤4 cams (`index.html`); All 5 = `all.html` (choice remembered as `cameras_all_five`)
 - **Back to slideshow** — returns to customer home
 
-LAN is primary for both home and cameras (`prefer_home_lan` / `prefer_cameras_lan` = true) because the Stick stays on restaurant Wi‑Fi. Nabu Casa URLs are backup only.
+**Network note (v1.2.1):** The restaurant Fire Stick is on restaurant Wi‑Fi and **cannot reach the home Pi** at `192.168.1.27`. Nabu Casa HTTPS is primary (`prefer_home_lan` / `prefer_cameras_lan` = **false**). LAN URLs are backups for when the Stick is on home Wi‑Fi. If a LAN page fails to load, the app retries the matching Nabu URL once.
 
 Customer slideshow stays fullscreen with **no** persistent refresh chrome. Short Menu on slideshow does nothing; wrong/cancel PIN keeps the UI clean. **Back** from cameras returns to the slideshow.
 
@@ -90,24 +90,25 @@ If `adb devices` shows `unauthorized`, accept the prompt on the TV.
 Edit `app/src/main/res/values/urls.xml`:
 
 ```xml
-<!-- Customer home — LAN primary -->
-<string name="url_home">http://192.168.1.27:8123/local/compadres-tv/index.html</string>
-<string name="url_home_nabu">https://…/local/compadres-tv/index.html</string>
+<!-- Customer home — Nabu primary -->
+<string name="url_home">https://…/local/compadres-tv/index.html</string>
+<string name="url_home_lan">http://192.168.1.27:8123/local/compadres-tv/index.html</string>
 
 <!-- Staff cameras ≤4 snapshot kiosk (no Lovelace / no HA login) -->
-<string name="url_cameras">http://192.168.1.27:8123/local/compadres-cameras/index.html</string>
-<string name="url_cameras_nabu">https://…/local/compadres-cameras/index.html</string>
+<string name="url_cameras">https://…/local/compadres-cameras/index.html</string>
+<string name="url_cameras_lan">http://192.168.1.27:8123/local/compadres-cameras/index.html</string>
 
 <!-- All 5 cams -->
-<string name="url_cameras_all">http://192.168.1.27:8123/local/compadres-cameras/all.html</string>
-<string name="url_cameras_all_nabu">https://…/local/compadres-cameras/all.html</string>
+<string name="url_cameras_all">https://…/local/compadres-cameras/all.html</string>
+<string name="url_cameras_all_lan">http://192.168.1.27:8123/local/compadres-cameras/all.html</string>
 
 <string name="staff_pin">0909</string>
-<bool name="prefer_cameras_lan">true</bool>
-<bool name="prefer_home_lan">true</bool>
+<bool name="prefer_cameras_lan">false</bool>
+<bool name="prefer_home_lan">false</bool>
 ```
 
-- Stick is always on restaurant Wi‑Fi → keep both `prefer_*_lan` true.
+- Restaurant Stick → keep both `prefer_*_lan` **false** (Nabu primary).
+- Home Wi‑Fi Stick / testing against the Pi → set `prefer_*_lan` true to prefer LAN.
 - **Do not put HA tokens in the app.** Cameras use public `/local` kiosk pages (no login).
 
 ## Cookie notes

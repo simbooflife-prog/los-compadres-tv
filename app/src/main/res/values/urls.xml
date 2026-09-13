@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Customer home — LAN primary (Stick always on restaurant WiFi) -->
-    <string name="url_home">http://192.168.1.27:8123/local/compadres-tv/index.html</string>
-    <string name="url_home_nabu">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-tv/index.html</string>
+    <!-- Customer home — Nabu primary (restaurant Stick cannot reach home Pi LAN) -->
+    <string name="url_home">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-tv/index.html</string>
+    <string name="url_home_lan">http://192.168.1.27:8123/local/compadres-tv/index.html</string>
 
     <!-- Staff cameras ≤4 snapshot kiosk (no Lovelace / no HA login) -->
-    <string name="url_cameras">http://192.168.1.27:8123/local/compadres-cameras/index.html</string>
-    <string name="url_cameras_nabu">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-cameras/index.html</string>
+    <string name="url_cameras">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-cameras/index.html</string>
+    <string name="url_cameras_lan">http://192.168.1.27:8123/local/compadres-cameras/index.html</string>
 
     <!-- All 5 cams try view -->
-    <string name="url_cameras_all">http://192.168.1.27:8123/local/compadres-cameras/all.html</string>
-    <string name="url_cameras_all_nabu">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-cameras/all.html</string>
+    <string name="url_cameras_all">https://1loiy6aum6qt4x1pp4isn1o6fbott58q.ui.nabu.casa/local/compadres-cameras/all.html</string>
+    <string name="url_cameras_all_lan">http://192.168.1.27:8123/local/compadres-cameras/all.html</string>
 
     <string name="staff_pin">0909</string>
 
-    <!-- Prefer LAN (true) — Stick always on restaurant WiFi -->
-    <bool name="prefer_cameras_lan">true</bool>
-    <bool name="prefer_home_lan">true</bool>
+    <!-- Prefer Nabu (false) — restaurant Stick uses Nabu; LAN only on home Wi‑Fi -->
+    <bool name="prefer_cameras_lan">false</bool>
+    <bool name="prefer_home_lan">false</bool>
 
     <!-- Legacy (unused): old Lovelace paths — staff must NOT hit these -->
     <!-- <string name="url_cameras_lovelace_legacy">…/lovelace/cameras</string> -->

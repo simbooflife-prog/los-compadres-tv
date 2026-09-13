@@ -11,6 +11,7 @@ import android.view.View
 import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -29,6 +30,9 @@ import androidx.appcompat.app.AppCompatActivity
  * Page 2 (staff): /local cameras kiosk after long-press Menu + correct PIN
  * (no Lovelace / no HA login), with slim staff bar
  * (Refresh, View Standard|All 5, Back to slideshow).
+ *
+ * URLs default to Nabu Casa (restaurant Wi‑Fi cannot reach home Pi LAN).
+ * If a LAN URL is loaded and fails, retry the matching Nabu URL once.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -47,10 +51,14 @@ class MainActivity : AppCompatActivity() {
     private var menuDownAt: Long = 0L
     private var menuLongHandled = false
 
+    /** One-shot LAN→Nabu retry after onReceivedError. */
+    private var nabuFallbackUsed = false
+
     companion object {
         private const val MENU_LONG_PRESS_MS = 700L
         private const val PREFS_NAME = "staff_prefs"
         private const val PREF_CAMERAS_ALL_FIVE = "cameras_all_five"
+        private const val LAN_HOST_MARKER = "192.168.1.27"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -99,7 +107,7 @@ class MainActivity : AppCompatActivity() {
             builtInZoomControls = false
             displayZoomControls = false
             setSupportZoom(false)
-            userAgentString = userAgentString + " LosCompadresTV/1.2"
+            userAgentString = userAgentString + " LosCompadresTV/1.2.1"
         }
 
         wv.webViewClient = object : WebViewClient() {
@@ -110,6 +118,26 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 CookieManager.getInstance().flush()
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                if (request == null || !request.isForMainFrame) return
+                handleMainFrameLoadError(view, request.url?.toString())
+            }
+
+            @Deprecated("Deprecated in Java")
+            override fun onReceivedError(
+                view: WebView?,
+                errorCode: Int,
+                description: String?,
+                failingUrl: String?
+            ) {
+                // API < 23 path; also called on some devices alongside the new API
+                handleMainFrameLoadError(view, failingUrl)
             }
         }
 
@@ -152,23 +180,50 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isLanUrl(url: String): Boolean =
+        url.contains(LAN_HOST_MARKER)
+
+    /**
+     * If a LAN URL fails to load (e.g. Stick not on home Wi‑Fi), retry the
+     * matching Nabu primary URL once.
+     */
+    private fun handleMainFrameLoadError(view: WebView?, failingUrl: String?) {
+        if (failingUrl.isNullOrBlank()) return
+        if (nabuFallbackUsed) return
+        if (!isLanUrl(failingUrl)) return
+        nabuFallbackUsed = true
+        val nabu = nabuUrlForCurrentPage()
+        view?.loadUrl(nabu)
+    }
+
+    private fun nabuUrlForCurrentPage(): String {
+        return when {
+            showingCameras && camerasAllFive -> getString(R.string.url_cameras_all)
+            showingCameras -> getString(R.string.url_cameras)
+            else -> getString(R.string.url_home)
+        }
+    }
+
+    /** prefer_*_lan false → Nabu (url_*); true → LAN (url_*_lan). */
     private fun resolveHomeUrl(): String {
         val preferLan = resources.getBoolean(R.bool.prefer_home_lan)
         return if (preferLan) {
-            getString(R.string.url_home)
+            getString(R.string.url_home_lan)
         } else {
-            getString(R.string.url_home_nabu)
+            getString(R.string.url_home)
         }
     }
 
     private fun loadHome() {
         showingCameras = false
+        nabuFallbackUsed = false
         hideStaffBar()
         webView.loadUrl(resolveHomeUrl())
     }
 
     private fun loadCameras() {
         showingCameras = true
+        nabuFallbackUsed = false
         showStaffBar()
         updateViewToggleLabel()
         webView.loadUrl(resolveCamerasUrl())
@@ -179,10 +234,10 @@ class MainActivity : AppCompatActivity() {
     private fun resolveCamerasUrl(): String {
         val preferLan = resources.getBoolean(R.bool.prefer_cameras_lan)
         return when {
-            camerasAllFive && preferLan -> getString(R.string.url_cameras_all)
-            camerasAllFive -> getString(R.string.url_cameras_all_nabu)
-            preferLan -> getString(R.string.url_cameras)
-            else -> getString(R.string.url_cameras_nabu)
+            camerasAllFive && preferLan -> getString(R.string.url_cameras_all_lan)
+            camerasAllFive -> getString(R.string.url_cameras_all)
+            preferLan -> getString(R.string.url_cameras_lan)
+            else -> getString(R.string.url_cameras)
         }
     }
 
@@ -191,8 +246,10 @@ class MainActivity : AppCompatActivity() {
         if (!current.isNullOrBlank() && current != "about:blank") {
             webView.reload()
         } else if (showingCameras) {
+            nabuFallbackUsed = false
             webView.loadUrl(resolveCamerasUrl())
         } else {
+            nabuFallbackUsed = false
             webView.loadUrl(resolveHomeUrl())
         }
     }
@@ -205,6 +262,7 @@ class MainActivity : AppCompatActivity() {
             .apply()
         updateViewToggleLabel()
         if (showingCameras) {
+            nabuFallbackUsed = false
             webView.loadUrl(resolveCamerasUrl())
         }
     }
